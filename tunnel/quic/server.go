@@ -56,10 +56,7 @@ func (s *Server) acceptStreamLoop(conn quic.Connection) {
 		log.Info("quic stream from", conn.RemoteAddr(), ",stream ID :", stream.StreamID())
 		go func(stream quic.Stream) {
 			s.connChan <- &transport.Conn{
-				Conn: wrappedConn{
-					conn,
-					stream,
-				},
+				newStreamConn(conn, stream, nil),
 			}
 		}(stream)
 	}

@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io"
-	"net"
 	"strings"
 	"sync"
 
@@ -36,9 +35,7 @@ type Client struct {
 	cancel     context.CancelFunc
 	nextProtos []string
 
-	once sync.Once
-
-	packetConn net.PacketConn
+	sessionManager sessionManager
 }
 
 func (c *Client) Close() error {
@@ -54,26 +51,20 @@ func (c *Client) DialPacket(tunnel.Tunnel) (tunnel.PacketConn, error) {
 }
 
 func (c *Client) DialConn(_ *tunnel.Address, _ tunnel.Tunnel) (tunnel.Conn, error) {
-	quicSession, err := c.getQuicConn()
+	s, err := c.sessionManager.getSession()
 	if err != nil {
 		return nil, common.NewError("quic failed to get connection").Base(err)
 	}
-	quicStream, err := quicSession.OpenStream()
+	sc, err := s.newStream()
 	if err != nil {
 		return nil, common.NewError("quic failed to open stream with remote server").Base(err)
 	}
 	return &transport.Conn{
-		Conn: wrappedConn{
-			quicSession,
-			quicStream,
-		},
+		Conn: sc,
 	}, nil
 }
 
 func (c *Client) getQuicConn() (quicSession quic.Connection, err error) {
-	// c.once.Do(func() {
-	//c.packetConn, err = net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4zero, Port: 0})
-	//})
 	if err != nil {
 		return nil, common.NewError("create packet conn failed").Base(err)
 	}
@@ -123,6 +114,20 @@ func NewClient(ctx context.Context, _ tunnel.Client) (*Client, error) {
 
 		ctx:    ctx,
 		cancel: cancel,
+	}
+
+	newSession := func() (*session, error) {
+		return &session{
+			dialFn: client.getQuicConn,
+			mutex:  new(sync.RWMutex),
+		}, nil
+	}
+
+	client.sessionManager = sessionManager{
+		ctx:        ctx,
+		newSession: newSession,
+
+		mutex: new(sync.Mutex),
 	}
 
 	log.Debug("quic client created")

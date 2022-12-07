@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/Dreamacro/clash v0.0.0-00010101000000-000000000000
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/lucas-clemente/quic-go v0.23.0
 	github.com/refraction-networking/utls v0.0.0-20210713165636-0b2885c8c0d4
 	github.com/shadowsocks/go-shadowsocks2 v0.1.5
 	github.com/smartystreets/goconvey v1.6.4
@@ -51,12 +52,19 @@ require (
 )
 
 require (
+	github.com/cheekybits/genny v1.0.0 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect
 	github.com/klauspost/cpuid/v2 v2.0.12 // indirect
+	github.com/marten-seemann/qtls-go1-16 v0.1.4 // indirect
+	github.com/marten-seemann/qtls-go1-17 v0.1.0 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
+	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/sagernet/sing v0.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
 
