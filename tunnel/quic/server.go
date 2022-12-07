@@ -11,16 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/p4gefau1t/trojan-go/tunnel/tls/fingerprint"
-
-	"github.com/p4gefau1t/trojan-go/tunnel/transport"
-
-	"github.com/lucas-clemente/quic-go"
+	"github.com/Dreamacro/clash/transport/tuic"
+	"github.com/metacubex/quic-go"
 
 	"github.com/p4gefau1t/trojan-go/common"
 	"github.com/p4gefau1t/trojan-go/config"
 	"github.com/p4gefau1t/trojan-go/log"
 	"github.com/p4gefau1t/trojan-go/tunnel"
+	"github.com/p4gefau1t/trojan-go/tunnel/tls/fingerprint"
+	"github.com/p4gefau1t/trojan-go/tunnel/transport"
 )
 
 // Server is a tls server
@@ -78,6 +77,7 @@ func (s *Server) acceptLoop() {
 			}
 			return
 		}
+		tuic.SetCongestionController(conn, "bbr")
 		go s.acceptStreamLoop(conn)
 	}
 }
