@@ -24,7 +24,7 @@ import (
 
 // Server is a tls server
 type Server struct {
-	listener quic.Listener
+	listener quic.EarlyListener
 
 	connChan chan tunnel.Conn
 
@@ -103,7 +103,7 @@ func NewServer(ctx context.Context, _ tunnel.Server) (*Server, error) {
 	}
 
 	listenAddress := tunnel.NewAddressFromHostPort("udp", cfg.LocalHost, cfg.LocalPort)
-	listener, err := quic.ListenAddr(listenAddress.String(), tlsConfig, nil)
+	listener, err := quic.ListenAddrEarly(listenAddress.String(), tlsConfig, nil)
 	if err != nil {
 		return nil, err
 	}
