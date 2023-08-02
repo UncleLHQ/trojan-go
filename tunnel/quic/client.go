@@ -85,7 +85,7 @@ func (c *Client) getQuicConn() (quicSession quic.Connection, err error) {
 		NextProtos:             c.nextProtos,
 	}
 
-	quicSession, err = quic.DialAddr(addrStr, tlsConf, nil)
+	quicSession, err = quic.DialAddr(c.ctx, addrStr, tlsConf, nil)
 	if err != nil {
 		return nil, common.NewError("quic failed to dial with remote server").Base(err)
 	}

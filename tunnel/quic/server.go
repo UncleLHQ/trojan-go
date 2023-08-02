@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Dreamacro/clash/transport/tuic"
+	tuic "github.com/Dreamacro/clash/transport/tuic/common"
 	"github.com/metacubex/quic-go"
 
 	"github.com/p4gefau1t/trojan-go/common"
@@ -24,7 +24,7 @@ import (
 
 // Server is a tls server
 type Server struct {
-	listener quic.EarlyListener
+	listener *quic.EarlyListener
 
 	connChan chan tunnel.Conn
 
@@ -74,7 +74,7 @@ func (s *Server) acceptLoop() {
 			}
 			return
 		}
-		tuic.SetCongestionController(conn, "bbr")
+		tuic.SetCongestionController(conn, "bbr", 32)
 		go s.acceptStreamLoop(conn)
 	}
 }
