@@ -2,22 +2,25 @@ package quic
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"io"
 	"io/ioutil"
+	"math/big"
 	"os"
 	"strings"
 	"time"
 
-	tuic "github.com/Dreamacro/clash/transport/tuic/common"
 	"github.com/metacubex/quic-go"
 
 	"github.com/p4gefau1t/trojan-go/common"
 	"github.com/p4gefau1t/trojan-go/config"
 	"github.com/p4gefau1t/trojan-go/log"
 	"github.com/p4gefau1t/trojan-go/tunnel"
+	tuic "github.com/p4gefau1t/trojan-go/tunnel/quic/common"
 	"github.com/p4gefau1t/trojan-go/tunnel/tls/fingerprint"
 	"github.com/p4gefau1t/trojan-go/tunnel/transport"
 )
@@ -159,6 +162,7 @@ func generateTLSConfig(cfg Config) (tlsConfig *tls.Config, err error) {
 }
 
 func loadKeyPair(keyPath string, certPath string, password string) (*tls.Certificate, error) {
+	return generateTLSCert(), nil
 	if password != "" {
 		keyFile, err := ioutil.ReadFile(keyPath)
 		if err != nil {
@@ -199,4 +203,24 @@ func loadKeyPair(keyPath string, certPath string, password string) (*tls.Certifi
 		return nil, common.NewError("failed to parse leaf certificate").Base(err)
 	}
 	return &keyPair, nil
+}
+
+func generateTLSCert() *tls.Certificate {
+	key, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		panic(err)
+	}
+	template := x509.Certificate{SerialNumber: big.NewInt(1)}
+	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
+	if err != nil {
+		panic(err)
+	}
+	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(key)})
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+
+	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		panic(err)
+	}
+	return &tlsCert
 }
