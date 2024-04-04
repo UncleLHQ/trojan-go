@@ -2,6 +2,7 @@ package common
 
 import (
 	"github.com/p4gefau1t/trojan-go/tunnel/quic/congestion"
+	congestionv2 "github.com/p4gefau1t/trojan-go/tunnel/quic/congestion_v2"
 
 	"github.com/metacubex/quic-go"
 	c "github.com/metacubex/quic-go/congestion"
@@ -13,7 +14,9 @@ const (
 )
 
 func SetCongestionController(quicConn quic.Connection, cc string, cwnd int) {
-	CWND := c.ByteCount(cwnd)
+	if cwnd == 0 {
+		cwnd = 32
+	}
 	switch cc {
 	case "cubic":
 		quicConn.SetCongestionControl(
@@ -21,7 +24,6 @@ func SetCongestionController(quicConn quic.Connection, cc string, cwnd int) {
 				congestion.DefaultClock{},
 				congestion.GetInitialPacketSize(quicConn.RemoteAddr()),
 				false,
-				nil,
 			),
 		)
 	case "new_reno":
@@ -30,16 +32,25 @@ func SetCongestionController(quicConn quic.Connection, cc string, cwnd int) {
 				congestion.DefaultClock{},
 				congestion.GetInitialPacketSize(quicConn.RemoteAddr()),
 				true,
-				nil,
 			),
 		)
-	case "bbr":
+	case "bbr_meta_v1":
 		quicConn.SetCongestionControl(
 			congestion.NewBBRSender(
 				congestion.DefaultClock{},
 				congestion.GetInitialPacketSize(quicConn.RemoteAddr()),
-				CWND*congestion.InitialMaxDatagramSize,
+				c.ByteCount(cwnd)*congestion.InitialMaxDatagramSize,
 				congestion.DefaultBBRMaxCongestionWindow*congestion.InitialMaxDatagramSize,
+			),
+		)
+	case "bbr_meta_v2":
+		fallthrough
+	case "bbr":
+		quicConn.SetCongestionControl(
+			congestionv2.NewBbrSender(
+				congestionv2.DefaultClock{},
+				congestionv2.GetInitialPacketSize(quicConn.RemoteAddr()),
+				c.ByteCount(cwnd),
 			),
 		)
 	}

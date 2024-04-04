@@ -1,28 +1,13 @@
 package congestion
 
 import (
+	"cmp"
 	"math"
 	"time"
-
-	"golang.org/x/exp/constraints"
 )
 
 // InfDuration is a duration of infinite length
 const InfDuration = time.Duration(math.MaxInt64)
-
-func Max[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return b
-	}
-	return a
-}
-
-func Min[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return a
-	}
-	return b
-}
 
 // MinNonZeroDuration return the minimum duration that's not zero.
 func MinNonZeroDuration(a, b time.Duration) time.Duration {
@@ -69,4 +54,12 @@ func MaxTime(a, b time.Time) time.Time {
 		return a
 	}
 	return b
+}
+
+func Max[T cmp.Ordered](a, b T) T {
+	return max(a, b)
+}
+
+func Min[T cmp.Ordered](a, b T) T {
+	return min(a, b)
 }

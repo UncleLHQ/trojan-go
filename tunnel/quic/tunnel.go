@@ -6,7 +6,7 @@ import (
 	"github.com/p4gefau1t/trojan-go/tunnel"
 )
 
-const Name = "TLS"
+const Name = "QUIC"
 
 type Tunnel struct{}
 
