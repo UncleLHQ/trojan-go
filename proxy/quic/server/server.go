@@ -5,11 +5,8 @@ import (
 
 	"github.com/p4gefau1t/trojan-go/tunnel/quic"
 
-	"github.com/p4gefau1t/trojan-go/config"
 	"github.com/p4gefau1t/trojan-go/proxy"
-	"github.com/p4gefau1t/trojan-go/proxy/client"
 	"github.com/p4gefau1t/trojan-go/tunnel/freedom"
-	"github.com/p4gefau1t/trojan-go/tunnel/router"
 	"github.com/p4gefau1t/trojan-go/tunnel/trojan"
 )
 
@@ -20,7 +17,6 @@ func init() {
 }
 
 func buildProxy(ctx context.Context) (*proxy.Proxy, error) {
-	cfg := config.FromContext(ctx, Name).(*client.Config)
 	ctx, cancel := context.WithCancel(ctx)
 	quicServer, err := quic.NewServer(ctx, nil)
 	if err != nil {
@@ -28,9 +24,6 @@ func buildProxy(ctx context.Context) (*proxy.Proxy, error) {
 		return nil, err
 	}
 	clientStack := []string{freedom.Name}
-	if cfg.Router.Enabled {
-		clientStack = []string{freedom.Name, router.Name}
-	}
 
 	root := &proxy.Node{
 		Name:       quic.Name,

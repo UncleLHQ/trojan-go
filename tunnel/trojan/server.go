@@ -7,16 +7,13 @@ import (
 	"net"
 	"sync/atomic"
 
-	"github.com/p4gefau1t/trojan-go/api"
 	"github.com/p4gefau1t/trojan-go/common"
 	"github.com/p4gefau1t/trojan-go/config"
 	"github.com/p4gefau1t/trojan-go/log"
 	"github.com/p4gefau1t/trojan-go/redirector"
 	"github.com/p4gefau1t/trojan-go/statistic"
 	"github.com/p4gefau1t/trojan-go/statistic/memory"
-	"github.com/p4gefau1t/trojan-go/statistic/mysql"
 	"github.com/p4gefau1t/trojan-go/tunnel"
-	"github.com/p4gefau1t/trojan-go/tunnel/mux"
 )
 
 // InboundConn is a trojan inbound connection
@@ -183,21 +180,11 @@ func (s *Server) acceptLoop() {
 }
 
 func (s *Server) AcceptConn(nextTunnel tunnel.Tunnel) (tunnel.Conn, error) {
-	switch nextTunnel.(type) {
-	case *mux.Tunnel:
-		select {
-		case t := <-s.muxChan:
-			return t, nil
-		case <-s.ctx.Done():
-			return nil, common.NewError("trojan client closed")
-		}
-	default:
-		select {
-		case t := <-s.connChan:
-			return t, nil
-		case <-s.ctx.Done():
-			return nil, common.NewError("trojan client closed")
-		}
+	select {
+	case t := <-s.connChan:
+		return t, nil
+	case <-s.ctx.Done():
+		return nil, common.NewError("trojan client closed")
 	}
 }
 
@@ -217,20 +204,13 @@ func NewServer(ctx context.Context, underlay tunnel.Server) (*Server, error) {
 	// TODO replace this dirty code
 	var auth statistic.Authenticator
 	var err error
-	if cfg.MySQL.Enabled {
-		log.Debug("mysql enabled")
-		auth, err = statistic.NewAuthenticator(ctx, mysql.Name)
-	} else {
-		log.Debug("auth by config file")
-		auth, err = statistic.NewAuthenticator(ctx, memory.Name)
-	}
+
+	log.Debug("auth by config file")
+	auth, err = statistic.NewAuthenticator(ctx, memory.Name)
+
 	if err != nil {
 		cancel()
 		return nil, common.NewError("trojan failed to create authenticator")
-	}
-
-	if cfg.API.Enabled {
-		go api.RunService(ctx, Name+"_SERVER", auth)
 	}
 
 	redirAddr := tunnel.NewAddressFromHostPort("tcp", cfg.RemoteHost, cfg.RemotePort)

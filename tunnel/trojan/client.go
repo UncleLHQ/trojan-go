@@ -8,14 +8,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/p4gefau1t/trojan-go/api"
 	"github.com/p4gefau1t/trojan-go/common"
-	"github.com/p4gefau1t/trojan-go/config"
 	"github.com/p4gefau1t/trojan-go/log"
 	"github.com/p4gefau1t/trojan-go/statistic"
 	"github.com/p4gefau1t/trojan-go/statistic/memory"
 	"github.com/p4gefau1t/trojan-go/tunnel"
-	"github.com/p4gefau1t/trojan-go/tunnel/mux"
 )
 
 const (
@@ -120,9 +117,6 @@ func (c *Client) DialConn(addr *tunnel.Address, overlay tunnel.Tunnel) (tunnel.C
 			Address: addr,
 		},
 	}
-	if _, ok := overlay.(*mux.Tunnel); ok {
-		newConn.metadata.Command = Mux
-	}
 
 	go func(newConn *OutboundConn) {
 		// if the trojan header is still buffered after 100 ms, the client may expect data from the server
@@ -160,11 +154,6 @@ func NewClient(ctx context.Context, client tunnel.Client) (*Client, error) {
 	if err != nil {
 		cancel()
 		return nil, err
-	}
-
-	cfg := config.FromContext(ctx, Name).(*Config)
-	if cfg.API.Enabled {
-		go api.RunService(ctx, Name+"_CLIENT", auth)
 	}
 
 	var user statistic.User
