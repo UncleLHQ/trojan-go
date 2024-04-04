@@ -24,7 +24,6 @@ import (
 	"github.com/p4gefau1t/trojan-go/tunnel"
 	"github.com/p4gefau1t/trojan-go/tunnel/tls/fingerprint"
 	"github.com/p4gefau1t/trojan-go/tunnel/transport"
-	"github.com/p4gefau1t/trojan-go/tunnel/websocket"
 )
 
 // Server is a tls server
@@ -179,17 +178,6 @@ func (s *Server) acceptLoop() {
 }
 
 func (s *Server) AcceptConn(overlay tunnel.Tunnel) (tunnel.Conn, error) {
-	if _, ok := overlay.(*websocket.Tunnel); ok {
-		atomic.StoreInt32(&s.nextHTTP, 1)
-		log.Debug("next proto http")
-		// websocket overlay
-		select {
-		case conn := <-s.wsChan:
-			return conn, nil
-		case <-s.ctx.Done():
-			return nil, common.NewError("transport server closed")
-		}
-	}
 	// trojan overlay
 	select {
 	case conn := <-s.connChan:
